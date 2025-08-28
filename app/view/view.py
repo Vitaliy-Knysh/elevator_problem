@@ -30,7 +30,7 @@ class View:
         pygame.display.set_caption('Симулятор лифта')
         self.clock = pygame.time.Clock()
 
-    def display(self):
+    def run(self):
         while True:
             self._draw_background()
             self._draw_control_panel()
@@ -41,9 +41,8 @@ class View:
                         (button := self._check_button_collisions(e))):
                     self.floor = button.floor
                     self.doors_opened = True
-
                 if e.type == pygame.QUIT:
-                    exit()  # todo жестко гасим весь python. Насколько обоснованно?
+                    exit()
                 pygame.display.update()
             self.clock.tick(30)
 

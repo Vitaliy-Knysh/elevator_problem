@@ -1,5 +1,8 @@
-import pygame
 from os.path import abspath
+
+import pygame
+
+from app.dto import DisplayButton
 
 
 class View:
@@ -12,13 +15,16 @@ class View:
     IMG_ELEVATOR_OPENED = pygame.image.load(abspath('../app/resources/elevator_opened.png'))
     IMG_ARROW = pygame.image.load(abspath('../app/resources/arrow.png'))
     WIDTH = 600
+    BTN_WIDTH = 100
+    BTN_HEIGHT = 30
 
     def __init__(self, floor_count: int):
         self.floor = 1
         self.doors_opened = False
         self.floor_count = floor_count if floor_count > 0 else 1
         window_size = (self.WIDTH, floor_count * self.IMG_ELEVATOR_HEIGHT)
-        self.floor_rects, self.floor_num_rects, self.button_rects = self._get_rects()
+        self.floor_rects, self.floor_num_rects = self._get_floor_rects()
+        self.buttons = self._create_buttons()
         pygame.init()
         self.screen = pygame.display.set_mode(window_size)
         pygame.display.set_caption('Симулятор лифта')
@@ -27,14 +33,14 @@ class View:
     def display(self):
         while True:
             self._draw_background()
+            self._draw_control_panel()
             self._draw_buttons()
             self._draw_current_floor()
             for e in pygame.event.get():
-                if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1 and (
-                        button_id := self._check_button_collisions(e)):
-                    self.floor = button_id
+                if (e.type == pygame.MOUSEBUTTONDOWN and e.button == 1 and
+                        (button := self._check_button_collisions(e))):
+                    self.floor = button.floor
                     self.doors_opened = True
-                    self._draw_button_pressed(button_id)
 
                 if e.type == pygame.QUIT:
                     exit()  # todo жестко гасим весь python. Насколько обоснованно?
@@ -52,47 +58,68 @@ class View:
             floor_num = font.render(str(count + 1), True, self.GRAY)
             self.screen.blit(floor_num, r)
 
-    def _get_rects(self) -> tuple[list[pygame.Rect], list[pygame.Rect], list[pygame.Rect]]:
+    def _get_floor_rects(self) -> tuple[list[pygame.Rect], list[pygame.Rect]]:
         """
-        Возвращает объекты-прямоугольники для этажей, номеров этажей и кнопок.
+        Возвращает объекты-прямоугольники для этажей b, номеров этажей.
         Для того, нумерация этажей была снизу вверх, в конце список разворачивается.
         """
-        left_corner_x_pos = self.WIDTH // 2 - self.IMG_ELEVATOR_HEIGHT // 2
-        left_corner_y_pos = self.IMG_ELEVATOR_HEIGHT // 2
+        left_corner_x_pos = 0
         floor_rects = [pygame.Rect(left_corner_x_pos, i * self.IMG_ELEVATOR_HEIGHT, 100, 30)
                        for i in range(self.floor_count)
                        ][::-1]
-        floor_num_rects = [pygame.Rect(left_corner_x_pos, i * self.IMG_ELEVATOR_HEIGHT + 70, 100, 30)
+        floor_num_rects = [pygame.Rect(left_corner_x_pos + 5, i * self.IMG_ELEVATOR_HEIGHT + 70, 100, 30)
                            for i in range(self.floor_count)
                            ][::-1]
-        button_rects = [pygame.Rect(left_corner_x_pos + self.IMG_ELEVATOR_HEIGHT,
-                                    i * self.IMG_ELEVATOR_HEIGHT + left_corner_y_pos, 100, 30)
-                        for i in range(self.floor_count)
-                        ][::-1]
-        return floor_rects, floor_num_rects, button_rects
+
+        return floor_rects, floor_num_rects
+
+    def _create_buttons(self) -> list[DisplayButton]:
+        left_corner_x_pos = 0
+        left_corner_y_pos = self.IMG_ELEVATOR_HEIGHT // 2
+        buttons = []
+        for i in range(self.floor_count, -1, -1):
+            buttons.append(
+                DisplayButton(
+                    rect=pygame.Rect(left_corner_x_pos + self.IMG_ELEVATOR_HEIGHT,
+                                     i * self.IMG_ELEVATOR_HEIGHT + left_corner_y_pos, self.BTN_WIDTH, self.BTN_HEIGHT),
+                    text='Вызвать лифт',
+                    btn_id=f'floor_btn_{i}',
+                    btn_type='floor',
+                    floor=self.floor_count - i
+                )
+            )
+        left_corner_x_pos = self.WIDTH - 200
+        left_corner_y_pos = 70
+        for i in range(self.floor_count):
+            buttons.append(
+                DisplayButton(
+                    rect=pygame.Rect(left_corner_x_pos,
+                                     i * 40 + left_corner_y_pos, self.BTN_WIDTH, self.BTN_HEIGHT),
+                    text=f'{i + 1} Этаж',
+                    btn_id=f'control_btn_{i}',
+                    btn_type='control',
+                    floor=i + 1
+                )
+            )
+        return buttons
 
     def _draw_buttons(self):
         font = pygame.font.SysFont(name=None, size=18)
-        text = font.render("Вызвать лифт", True, self.BLACK)
-        for r in self.button_rects:
-            pygame.draw.rect(self.screen, self.WHITE, rect=r, border_radius=10)
-            self.screen.blit(text, dest=text.get_rect(center=r.center))
+        for btn in self.buttons:
+            bg_color = self.GRAY if btn.pressed else self.WHITE
+            pygame.draw.rect(self.screen, bg_color, rect=btn.rect, border_radius=10)
+            text = font.render(btn.text, True, self.BLACK)
+            self.screen.blit(text, dest=text.get_rect(center=btn.rect.center))
 
-    def _draw_button_pressed(self, button_id: int):
-        font = pygame.font.SysFont(name=None, size=18)
-        text = font.render("Вызвать лифт", True, self.BLACK)
-        rect = self.button_rects[button_id - 1]
-        pygame.draw.rect(self.screen, self.GRAY, rect=rect, border_radius=10)
-        self.screen.blit(text, dest=text.get_rect(center=rect.center))
-
-    def _check_button_collisions(self, event: pygame.event) -> int:
-        for count, r in enumerate(self.button_rects):
-            if r.collidepoint(event.pos):
-                return count + 1
-        return 0
+    def _check_button_collisions(self, event: pygame.event) -> DisplayButton | None:
+        for btn in self.buttons:
+            if btn.rect.collidepoint(event.pos):
+                btn.pressed = True
+                return btn
+        return None
 
     def _draw_current_floor(self):
-        left_corner_x_pos = self.WIDTH // 2 - 5
+        left_corner_x_pos = self.IMG_ELEVATOR_HEIGHT // 2 - 5
         left_corner_y_pos = 28
         font = pygame.font.SysFont(name=None, size=20, bold=True)
         text = font.render(str(self.floor), True, self.WHITE)
@@ -100,4 +127,13 @@ class View:
             self.screen.blit(text, dest=(left_corner_x_pos, i * self.IMG_ELEVATOR_HEIGHT + left_corner_y_pos))
 
     def _draw_control_panel(self):
-        pass
+        left_corner_x_pos = self.WIDTH - 250
+        left_corner_y_pos = 0
+        bg_height = self.BTN_HEIGHT * self.floor_count + 130
+        background = pygame.Rect(left_corner_x_pos - 20, left_corner_y_pos - 10, 250, bg_height)
+        font = pygame.font.SysFont(name=None, size=40, bold=True)
+        text1 = font.render('Управляющая', True, self.WHITE)
+        text2 = font.render('панель', True, self.WHITE)
+        pygame.draw.rect(self.screen, self.GRAY, rect=background, border_radius=10)
+        self.screen.blit(text1, dest=(left_corner_x_pos, left_corner_y_pos))
+        self.screen.blit(text2, dest=(left_corner_x_pos, left_corner_y_pos + 25))

@@ -2,7 +2,7 @@ from os.path import abspath
 
 import pygame
 
-from app.dto import DisplayButton
+from app.dto import DisplayButton, ElevatorState
 from app.model.elevator import Elevator
 
 
@@ -20,7 +20,8 @@ class View:
     BTN_HEIGHT = 30
 
     def __init__(self, floor_count: int):
-        self.floor = 1
+        self.state = ElevatorState(floor=0, move='STOP')
+        # self.floor = 1
         self.doors_opened = False
         self.floor_count = floor_count if floor_count > 0 else 1
         window_size = (self.WIDTH, floor_count * self.IMG_ELEVATOR_HEIGHT)
@@ -35,9 +36,9 @@ class View:
         while True:
             self._draw_scene()
             self._perform_checks()
-            pressed_buttons = [btn for btn in self.buttons if btn.pressed]
-            print(pressed_buttons)
-            await elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed])  # todo переименовать по-человечески
+            self.state = await elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed])  # todo переименовать по-человечески
+            if self.state.move == 'STOP':
+                self._unpress_all_buttons()
             pygame.display.update()
             self.clock.tick(30)
 
@@ -45,8 +46,7 @@ class View:
         for e in pygame.event.get():
             if (e.type == pygame.MOUSEBUTTONDOWN and e.button == 1 and
                     (button := self._check_button_collisions(e))):
-                self.floor = button.floor
-                self.doors_opened = True
+                pass
 
             if e.type == pygame.QUIT:
                 exit()  # todo жестко гасим весь python. годится?
@@ -56,8 +56,8 @@ class View:
         font = pygame.font.SysFont(name=None, size=65, bold=True)
         for r in self.floor_rects:
             self.screen.blit(self.IMG_ELEVATOR, r)
-        if self.doors_opened:
-            self.screen.blit(self.IMG_ELEVATOR_OPENED, self.floor_rects[self.floor - 1])
+        if self.state.move == 'STOP':
+            self.screen.blit(self.IMG_ELEVATOR_OPENED, self.floor_rects[self.state.floor])
         for count, r in enumerate(self.floor_num_rects):
             floor_num = font.render(str(count + 1), True, self.GRAY)
             self.screen.blit(floor_num, r)
@@ -95,7 +95,7 @@ class View:
                     text='Вызвать лифт',
                     btn_id=f'floor_btn_{i}',
                     btn_type='floor',
-                    floor=self.floor_count - i
+                    floor=self.floor_count - i - 1
                 )
             )
         left_corner_x_pos = self.WIDTH - 200
@@ -108,7 +108,7 @@ class View:
                     text=f'{i + 1} Этаж',
                     btn_id=f'control_btn_{i}',
                     btn_type='control',
-                    floor=i + 1
+                    floor=i
                 )
             )
         return buttons
@@ -132,7 +132,7 @@ class View:
         left_corner_x_pos = self.IMG_ELEVATOR_HEIGHT // 2 - 5
         left_corner_y_pos = 28
         font = pygame.font.SysFont(name=None, size=20, bold=True)
-        text = font.render(str(self.floor), True, self.WHITE)
+        text = font.render(str(self.state.floor + 1), True, self.WHITE)
         for i in range(self.floor_count):
             self.screen.blit(text, dest=(left_corner_x_pos, i * self.IMG_ELEVATOR_HEIGHT + left_corner_y_pos))
 
@@ -147,3 +147,8 @@ class View:
         pygame.draw.rect(self.screen, self.GRAY, rect=background, border_radius=10)
         self.screen.blit(text1, dest=(left_corner_x_pos, left_corner_y_pos))
         self.screen.blit(text2, dest=(left_corner_x_pos, left_corner_y_pos + 25))
+
+    def _unpress_all_buttons(self):
+        for btn in self.buttons:
+            if btn.pressed:
+                btn.pressed = False

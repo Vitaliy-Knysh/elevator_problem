@@ -15,4 +15,4 @@ class DisplayButton(BaseModel, arbitrary_types_allowed=True):
 
 class ElevatorState(BaseModel):
     floor: int
-    state: Literal['STOP', 'UP', 'DOWN']
+    move: Literal['STOP', 'UP', 'DOWN']

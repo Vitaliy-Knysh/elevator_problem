@@ -33,10 +33,12 @@ class View:
         self.clock = pygame.time.Clock()
 
     def run(self, elevator: Elevator):
+        move_ts = datetime.now()
         while True:
             self._draw_scene()
             self._perform_checks()
-            self.state = elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed])  # todo переименовать по-человечески
+            time_diff = datetime.now() - move_ts
+            self.state = elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed], time_diff=time_diff)  # todo переименовать по-человечески
             if self.state.move == 'STOP':
                 self._unpress_all_buttons()
             pygame.display.update()

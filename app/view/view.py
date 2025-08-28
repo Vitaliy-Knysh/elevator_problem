@@ -3,6 +3,7 @@ from os.path import abspath
 import pygame
 
 from app.dto import DisplayButton
+from app.model.elevator import Elevator
 
 
 class View:
@@ -30,21 +31,25 @@ class View:
         pygame.display.set_caption('Симулятор лифта')
         self.clock = pygame.time.Clock()
 
-    def run(self):
+    async def run(self, elevator: Elevator):
         while True:
-            self._draw_background()
-            self._draw_control_panel()
-            self._draw_buttons()
-            self._draw_current_floor()
-            for e in pygame.event.get():
-                if (e.type == pygame.MOUSEBUTTONDOWN and e.button == 1 and
-                        (button := self._check_button_collisions(e))):
-                    self.floor = button.floor
-                    self.doors_opened = True
-                if e.type == pygame.QUIT:
-                    exit()
-                pygame.display.update()
+            self._draw_scene()
+            self._perform_checks()
+            pressed_buttons = [btn for btn in self.buttons if btn.pressed]
+            print(pressed_buttons)
+            await elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed])  # todo переименовать по-человечески
+            pygame.display.update()
             self.clock.tick(30)
+
+    def _perform_checks(self):
+        for e in pygame.event.get():
+            if (e.type == pygame.MOUSEBUTTONDOWN and e.button == 1 and
+                    (button := self._check_button_collisions(e))):
+                self.floor = button.floor
+                self.doors_opened = True
+
+            if e.type == pygame.QUIT:
+                exit()  # todo жестко гасим весь python. годится?
 
     def _draw_background(self):
         self.screen.fill(color=self.BACKGROUND)
@@ -56,6 +61,12 @@ class View:
         for count, r in enumerate(self.floor_num_rects):
             floor_num = font.render(str(count + 1), True, self.GRAY)
             self.screen.blit(floor_num, r)
+
+    def _draw_scene(self):
+        self._draw_background()
+        self._draw_control_panel()
+        self._draw_buttons()
+        self._draw_current_floor()
 
     def _get_floor_rects(self) -> tuple[list[pygame.Rect], list[pygame.Rect]]:
         """

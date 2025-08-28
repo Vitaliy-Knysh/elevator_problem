@@ -11,3 +11,8 @@ class DisplayButton(BaseModel, arbitrary_types_allowed=True):
     btn_type: Literal['floor', 'control']
     floor: int
     pressed: bool = False
+
+
+class ElevatorState(BaseModel):
+    floor: int
+    state: Literal['STOP', 'UP', 'DOWN']

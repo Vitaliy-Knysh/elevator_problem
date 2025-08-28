@@ -1,5 +1,3 @@
-import asyncio
-
 from app.model.elevator import Elevator
 from app.view.view import View
 
@@ -9,4 +7,4 @@ view = View(floor_count=FLOOR_COUNT)
 elevator = Elevator(floor_count=FLOOR_COUNT)
 
 if __name__ == "__main__":
-    asyncio.run(view.run(elevator=elevator))
+    view.run(elevator=elevator)

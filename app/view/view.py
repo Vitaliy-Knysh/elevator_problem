@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from os.path import abspath
 
 import pygame
@@ -21,7 +22,6 @@ class View:
 
     def __init__(self, floor_count: int):
         self.state = ElevatorState(floor=0, move='STOP')
-        # self.floor = 1
         self.doors_opened = False
         self.floor_count = floor_count if floor_count > 0 else 1
         window_size = (self.WIDTH, floor_count * self.IMG_ELEVATOR_HEIGHT)
@@ -32,11 +32,11 @@ class View:
         pygame.display.set_caption('Симулятор лифта')
         self.clock = pygame.time.Clock()
 
-    async def run(self, elevator: Elevator):
+    def run(self, elevator: Elevator):
         while True:
             self._draw_scene()
             self._perform_checks()
-            self.state = await elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed])  # todo переименовать по-человечески
+            self.state = elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed])  # todo переименовать по-человечески
             if self.state.move == 'STOP':
                 self._unpress_all_buttons()
             pygame.display.update()
@@ -44,9 +44,8 @@ class View:
 
     def _perform_checks(self):
         for e in pygame.event.get():
-            if (e.type == pygame.MOUSEBUTTONDOWN and e.button == 1 and
-                    (button := self._check_button_collisions(e))):
-                pass
+            if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
+                self._check_button_collisions(e)
 
             if e.type == pygame.QUIT:
                 exit()  # todo жестко гасим весь python. годится?
@@ -121,12 +120,10 @@ class View:
             text = font.render(btn.text, True, self.BLACK)
             self.screen.blit(text, dest=text.get_rect(center=btn.rect.center))
 
-    def _check_button_collisions(self, event: pygame.event) -> DisplayButton | None:
+    def _check_button_collisions(self, event: pygame.event):
         for btn in self.buttons:
             if btn.rect.collidepoint(event.pos):
                 btn.pressed = True
-                return btn
-        return None
 
     def _draw_current_floor(self):
         left_corner_x_pos = self.IMG_ELEVATOR_HEIGHT // 2 - 5

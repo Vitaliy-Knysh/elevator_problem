@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from os.path import abspath
 
 import pygame
@@ -38,7 +38,8 @@ class View:
             self._draw_scene()
             self._perform_checks()
             time_diff = datetime.now() - move_ts
-            self.state = elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed], time_diff=time_diff)  # todo переименовать по-человечески
+            self.state = elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed],
+                                        time_diff=time_diff)
             if self.state.move == 'STOP':
                 self._unpress_current_floor_buttons()
 
@@ -51,7 +52,7 @@ class View:
                 self._check_button_collisions(e)
 
             if e.type == pygame.QUIT:
-                exit()  # todo жестко гасим весь python. годится?
+                exit()
 
     def _draw_background(self):
         self.screen.fill(color=self.BACKGROUND)
@@ -95,7 +96,6 @@ class View:
                     rect=pygame.Rect(left_corner_x_pos + self.IMG_ELEVATOR_HEIGHT,
                                      i * self.IMG_ELEVATOR_HEIGHT + left_corner_y_pos, self.BTN_WIDTH, self.BTN_HEIGHT),
                     text='Вызвать лифт',
-                    btn_id=f'floor_btn_{i}',
                     btn_type='floor',
                     floor=self.floor_count - i - 1
                 )
@@ -108,7 +108,6 @@ class View:
                     rect=pygame.Rect(left_corner_x_pos,
                                      i * 40 + left_corner_y_pos, self.BTN_WIDTH, self.BTN_HEIGHT),
                     text=f'{i + 1} Этаж',
-                    btn_id=f'control_btn_{i}',
                     btn_type='control',
                     floor=i
                 )

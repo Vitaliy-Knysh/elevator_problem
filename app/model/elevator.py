@@ -15,7 +15,6 @@ class Elevator:
         time_diff_seconds = ((ts_now := datetime.now()) - self.last_move_ts).seconds
         if self.state.floor and time_diff_seconds:
             self.state.floor -= 1
-            # self.state.move = 'DOWN'
             self.last_move_ts = ts_now
             print(f'1 этаж вниз; текущий этаж: {self.state.floor + 1}')  # todo потом сделать логирование
 
@@ -23,22 +22,19 @@ class Elevator:
         time_diff_seconds = ((ts_now := datetime.now()) - self.last_move_ts).seconds
         if self.state.floor < self.floor_count and time_diff_seconds:
             self.state.floor += 1
-            # self.state.move = 'UP'
             self.last_move_ts = ts_now
             print(f'1 этаж вверх; текущий этаж: {self.state.floor + 1}')  # todo потом сделать логирование
 
     def _wait_on_floor(self):
         if (datetime.now() - self.last_move_ts).seconds:
-            # self.last_move_ts = ts_now
             self.need_to_wait = False
             print((datetime.now() - self.last_move_ts).seconds)
             print(f'Остановка на этаже: {self.state.floor + 1}')  # todo потом сделать логирование
-        # self.last_move_ts = datetime.now()
 
     def move(self, target_floor: int, time_diff: timedelta):
         direction = target_floor - self.state.floor
         match self.state.move:
-            case 'UP':  # пока просто везем пассажира на этаж
+            case 'UP':
                 if self.state.floor == target_floor:
                     self.state.move = 'STOP'
                     self.need_to_wait = True
@@ -71,29 +67,26 @@ class Elevator:
         if not pressed_buttons:
             return self.state
         target_floor = self.get_target_floor(pressed_buttons=pressed_buttons)
-        # if not target_floor:
-        #     return self.state
         self.move(target_floor=target_floor, time_diff=time_diff)
         return self.state
 
     def get_target_floor(self, pressed_buttons: list[DisplayButton]) -> int:
         if not pressed_buttons:
             return self.state.floor
-        floors_requested = [btn.floor for btn in pressed_buttons]  # todo НЕТ РАЗНИЦЫ МЕЖДУ КНОПКОЙ В ЛИФТЕ И КНОПКОЙ НА ЭТАЖЕ
+        floors_requested = [btn.floor for btn in pressed_buttons]
         if not self.floor_queue:
-            self.floor_queue = floors_requested  # здесь может быть нажата только одна кнопка
+            self.floor_queue = floors_requested
         else:
             for btn in floors_requested:
                 if btn not in self.floor_queue:
                     self.floor_queue.append(btn)
-        # print(f'FLOOR QUEUE: {self.floor_queue}')
         match self.state.move:
             case 'UP':
                 return self.floor_queue[0]
             case 'DOWN':
-                return max([btn.floor for btn in pressed_buttons])  # todo ВРЕМЯНКА
+                return max([btn.floor for btn in pressed_buttons])
             case 'STOP':
                 if self.floor_queue[0] > self.state.floor:
                     return self.floor_queue[0]
                 else:
-                    return max([btn.floor for btn in pressed_buttons])  # todo ВРЕМЯНКА
+                    return max([btn.floor for btn in pressed_buttons])

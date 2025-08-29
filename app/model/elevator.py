@@ -37,19 +37,17 @@ class Elevator:
 
     def move(self, target_floor: int, time_diff: timedelta):
         direction = target_floor - self.state.floor
-
+        print(self.state.floor, self.state.move)
         match self.state.move:
             case 'UP':  # пока просто везем пассажира на этаж
                 if self.state.floor == target_floor:
                     self.state.move = 'STOP'
-                    # self.last_move_ts = datetime.now()
                     self.need_to_wait = True
                 else:
                     self._one_floor_up()
             case 'DOWN':
                 if self.state.floor == target_floor:
                     self.state.move = 'STOP'
-                    # self.last_move_ts = datetime.now()
                     self.need_to_wait = True
                 else:
                     self._one_floor_down()
@@ -72,10 +70,6 @@ class Elevator:
         if not pressed_buttons:
             return self.state
         target_floor = self.get_target_floor(pressed_buttons=pressed_buttons)
-        if target_floor == self.state.floor:
-            self.state.move = 'STOP'
-            return self.state
-
         self.move(target_floor=target_floor, time_diff=time_diff)
         return self.state
 

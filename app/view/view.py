@@ -13,10 +13,10 @@ class View:
     GRAY = (215, 215, 215)
     BLACK = (0, 0, 0)
     DARK_BLUE = (0, 140, 163)
-    IMG_ELEVATOR = pygame.image.load(abspath('../app/resources/elevator.png'))
+    IMG_ELEVATOR = pygame.image.load(abspath('../elevator_problem/app/resources/elevator.png'))
     IMG_ELEVATOR_HEIGHT = IMG_ELEVATOR.get_height()
-    IMG_ELEVATOR_OPENED = pygame.image.load(abspath('../app/resources/elevator_opened.png'))
-    IMG_ARROW = pygame.image.load(abspath('../app/resources/arrow.png'))
+    IMG_ELEVATOR_OPENED = pygame.image.load(abspath('../elevator_problem/app/resources/elevator_opened.png'))
+    IMG_ARROW = pygame.image.load(abspath('../elevator_problem/app/resources/arrow.png'))
     WIDTH = 600
     BTN_WIDTH = 100
     BTN_HEIGHT = 30

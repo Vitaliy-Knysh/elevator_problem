@@ -40,7 +40,8 @@ class View:
             time_diff = datetime.now() - move_ts
             self.state = elevator.logic(pressed_buttons=[btn for btn in self.buttons if btn.pressed], time_diff=time_diff)  # todo переименовать по-человечески
             if self.state.move == 'STOP':
-                self._unpress_all_buttons()
+                self._unpress_current_floor_buttons()
+
             pygame.display.update()
             self.clock.tick(30)
 
@@ -147,7 +148,7 @@ class View:
         self.screen.blit(text1, dest=(left_corner_x_pos, left_corner_y_pos))
         self.screen.blit(text2, dest=(left_corner_x_pos, left_corner_y_pos + 25))
 
-    def _unpress_all_buttons(self):
+    def _unpress_current_floor_buttons(self):
         for btn in self.buttons:
-            if btn.pressed:
+            if btn.floor == self.state.floor:
                 btn.pressed = False

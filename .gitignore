@@ -1,5 +1,7 @@
 .venv
 .idea
 __pycache__/
+app/__pycache__/
+app/view/__pycache/
 *.pyc
 logs

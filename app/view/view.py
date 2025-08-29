@@ -3,7 +3,7 @@ from os.path import abspath
 
 import pygame
 
-from app.dto import DisplayButton, ElevatorState
+from app.model.dto import DisplayButton, ElevatorState
 from app.model.elevator import Elevator
 
 
@@ -12,6 +12,7 @@ class View:
     WHITE = (255, 255, 255)
     GRAY = (215, 215, 215)
     BLACK = (0, 0, 0)
+    DARK_BLUE = (0, 140, 163)
     IMG_ELEVATOR = pygame.image.load(abspath('../app/resources/elevator.png'))
     IMG_ELEVATOR_HEIGHT = IMG_ELEVATOR.get_height()
     IMG_ELEVATOR_OPENED = pygame.image.load(abspath('../app/resources/elevator_opened.png'))
@@ -90,14 +91,14 @@ class View:
         left_corner_x_pos = 0
         left_corner_y_pos = self.IMG_ELEVATOR_HEIGHT // 2
         buttons = []
-        for i in range(self.floor_count, -1, -1):
+        for i in range(self.floor_count):
             buttons.append(
                 DisplayButton(
                     rect=pygame.Rect(left_corner_x_pos + self.IMG_ELEVATOR_HEIGHT,
                                      i * self.IMG_ELEVATOR_HEIGHT + left_corner_y_pos, self.BTN_WIDTH, self.BTN_HEIGHT),
                     text='Вызвать лифт',
                     btn_type='floor',
-                    floor=self.floor_count - i - 1
+                    floor=self.floor_count - 1 - i
                 )
             )
         left_corner_x_pos = self.WIDTH - 200
@@ -138,12 +139,12 @@ class View:
     def _draw_control_panel(self):
         left_corner_x_pos = self.WIDTH - 250
         left_corner_y_pos = 0
-        bg_height = self.BTN_HEIGHT * self.floor_count + 130
+        bg_height = self.BTN_HEIGHT * self.floor_count + 150
         background = pygame.Rect(left_corner_x_pos - 20, left_corner_y_pos - 10, 250, bg_height)
         font = pygame.font.SysFont(name=None, size=40, bold=True)
         text1 = font.render('Управляющая', True, self.WHITE)
         text2 = font.render('панель', True, self.WHITE)
-        pygame.draw.rect(self.screen, self.GRAY, rect=background, border_radius=10)
+        pygame.draw.rect(self.screen, self.DARK_BLUE, rect=background, border_radius=10)
         self.screen.blit(text1, dest=(left_corner_x_pos, left_corner_y_pos))
         self.screen.blit(text2, dest=(left_corner_x_pos, left_corner_y_pos + 25))
 

@@ -37,18 +37,19 @@ class Elevator:
 
     def move(self, target_floor: int, time_diff: timedelta):
         direction = target_floor - self.state.floor
-        print(self.state.floor, self.state.move)
         match self.state.move:
             case 'UP':  # пока просто везем пассажира на этаж
                 if self.state.floor == target_floor:
                     self.state.move = 'STOP'
                     self.need_to_wait = True
+                    self.floor_queue.remove(self.state.floor)
                 else:
                     self._one_floor_up()
             case 'DOWN':
                 if self.state.floor == target_floor:
                     self.state.move = 'STOP'
                     self.need_to_wait = True
+                    self.floor_queue.remove(self.state.floor)
                 else:
                     self._one_floor_down()
             case 'STOP':
@@ -70,9 +71,29 @@ class Elevator:
         if not pressed_buttons:
             return self.state
         target_floor = self.get_target_floor(pressed_buttons=pressed_buttons)
+        # if not target_floor:
+        #     return self.state
         self.move(target_floor=target_floor, time_diff=time_diff)
         return self.state
 
-    def get_target_floor(self, pressed_buttons: list[DisplayButton]) -> int | None:
-        if pressed_buttons:
-            return max([btn.floor for btn in pressed_buttons])  # todo ПОТОМ РАСШИРИТЬ
+    def get_target_floor(self, pressed_buttons: list[DisplayButton]) -> int:
+        if not pressed_buttons:
+            return self.state.floor
+        floors_requested = [btn.floor for btn in pressed_buttons]  # todo НЕТ РАЗНИЦЫ МЕЖДУ КНОПКОЙ В ЛИФТЕ И КНОПКОЙ НА ЭТАЖЕ
+        if not self.floor_queue:
+            self.floor_queue = floors_requested  # здесь может быть нажата только одна кнопка
+        else:
+            for btn in floors_requested:
+                if btn not in self.floor_queue:
+                    self.floor_queue.append(btn)
+        # print(f'FLOOR QUEUE: {self.floor_queue}')
+        match self.state.move:
+            case 'UP':
+                return self.floor_queue[0]
+            case 'DOWN':
+                return max([btn.floor for btn in pressed_buttons])  # todo ВРЕМЯНКА
+            case 'STOP':
+                if self.floor_queue[0] > self.state.floor:
+                    return self.floor_queue[0]
+                else:
+                    return max([btn.floor for btn in pressed_buttons])  # todo ВРЕМЯНКА

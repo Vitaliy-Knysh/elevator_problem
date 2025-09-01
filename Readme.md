@@ -1,7 +1,12 @@
 # Симулятор лифта на pygame
 ## Запуск
 Из корня проекта:
-`$ python -m main.app`
+```bash
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install -r requiremets.txt
+$ python3 main.py
+```
 ## Что дальше
 Сначала укажите, сколько этажей будет обслуживать лифт (не советую брать больше 7, т.к. окно получится слишком большим в высоту, а pygame не умеет в прокрутку). 
 

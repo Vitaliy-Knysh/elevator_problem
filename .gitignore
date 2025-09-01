@@ -3,5 +3,5 @@
 __pycache__/
 app/__pycache__/
 app/view/__pycache/
-*.pyc
+*pyc
 logs
